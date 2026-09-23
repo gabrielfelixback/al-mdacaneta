@@ -2,6 +2,7 @@
 // Uso: npm run build:teste  →  dist-teste/alem-da-caneta-teste.html
 import { execSync } from 'node:child_process';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { gzipSync } from 'node:zlib';
 
 execSync('npx expo export -p web --clear', {
   stdio: 'inherit',
@@ -10,7 +11,8 @@ execSync('npx expo export -p web --clear', {
 
 const index = readFileSync('dist/index.html', 'utf8');
 const src = index.match(/<script src="([^"]+)" defer><\/script>/)[1];
-const js = readFileSync(`dist${src}`, 'utf8').replaceAll('</script', '<\\/script');
+// O código vai compactado (gzip + base64) e é descompactado no navegador ao abrir.
+const js = gzipSync(readFileSync(`dist${src}`)).toString('base64');
 
 const FONTS = {
   InstrumentSerif_400Regular: 'instrument-serif/400Regular/InstrumentSerif_400Regular.ttf',
@@ -40,7 +42,15 @@ ${faces}
 // O app usa o endereço da página como rota: começa sempre pelo início.
 try { if (location.pathname !== '/') history.replaceState(null, '', '/'); } catch (e) {}
 </script>
-<script>${js}</script>
+<script>
+(async function () {
+  const bytes = Uint8Array.from(atob('${js}'), (c) => c.charCodeAt(0));
+  const code = await new Response(new Blob([bytes]).stream().pipeThrough(new DecompressionStream('gzip'))).text();
+  const el = document.createElement('script');
+  el.textContent = code;
+  document.body.appendChild(el);
+})();
+</script>
 `;
 
 mkdirSync('dist-teste', { recursive: true });
