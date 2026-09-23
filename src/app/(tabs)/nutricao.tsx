@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { NutritionCard } from '@/components/cards/NutritionCard';
+import { WaterCard } from '@/components/cards/WaterCard';
 import { TabScreen } from '@/components/Screen';
 import { HeaderActions } from '@/components/StreakBadge';
 import { Txt } from '@/components/Txt';
@@ -83,6 +84,7 @@ export default function Nutrition() {
       </Row>
 
       <NutritionCard day={day} />
+      <WaterCard day={day} />
 
       <Row gap={space.sm}>
         <Button label="Foto do prato" icon={Camera} tone="accent" style={{ flex: 1 }} onPress={() => open(undefined, 'foto')} />

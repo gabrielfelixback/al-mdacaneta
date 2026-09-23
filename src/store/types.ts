@@ -30,6 +30,25 @@ export interface Treatment {
   time: string; // HH:MM
   startedAt: string;
   concentrationMgMl?: number;
+  /** Frasco para a calculadora: mg totais e volume em mL. */
+  vialMg?: number;
+  vialMl?: number;
+  /** Capacidade da seringa de insulina U-100 usada (30, 50 ou 100 UI). */
+  syringeUi?: 30 | 50 | 100;
+}
+
+export interface ProState {
+  active: boolean;
+  plan?: 'mensal' | 'anual' | 'metodo3p';
+  since?: string;
+  renewsAt?: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  text: string;
+  at: string;
 }
 
 export interface DoseLog {

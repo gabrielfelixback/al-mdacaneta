@@ -63,6 +63,9 @@ export default function RootLayout() {
           <Stack.Screen name="meus-dados" />
           <Stack.Screen name="historico-peso" />
           <Stack.Screen name="relatorio" />
+          <Stack.Screen name="pro" options={{ ...modal, presentation: 'fullScreenModal' }} />
+          <Stack.Screen name="biblioteca" />
+          <Stack.Screen name="assistente" />
         </Stack.Protected>
       </Stack>
     </SafeAreaProvider>

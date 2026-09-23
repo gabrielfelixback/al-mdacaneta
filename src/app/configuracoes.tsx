@@ -1,19 +1,21 @@
 import Constants from 'expo-constants';
 import { router, type Href } from 'expo-router';
 import {
+  BookOpen,
   ChevronRight,
   Droplet,
   FileText,
   LogOut,
   Pill,
   ShieldCheck,
+  Sparkles,
   Stethoscope,
   UserRound,
   type LucideIcon,
 } from 'lucide-react-native';
 import { Alert, Platform, View } from 'react-native';
 
-import { Wordmark } from '@/components/Brand';
+import { CapsuleMark, Wordmark } from '@/components/Brand';
 import { StackScreen } from '@/components/Screen';
 import { Txt } from '@/components/Txt';
 import { Card, Chip, Divider, PressableRow, Row } from '@/components/ui';
@@ -50,15 +52,35 @@ export default function Settings() {
   const cup = useStore((s) => s.settings.cupMl);
   const updateSettings = useStore((s) => s.updateSettings);
   const reset = useStore((s) => s.reset);
+  const pro = useStore((s) => s.pro.active);
   const go = (h: Href) => router.push(h);
 
   return (
     <StackScreen title="Configurações">
+      <Card tone="strong" onPress={() => go('/pro')}>
+        <Row>
+          <CapsuleMark size={16} color={colors.textOnStrong} />
+          <View style={{ flex: 1 }}>
+            <Txt variant="h3" color={colors.textOnStrong}>
+              {pro ? 'Além Pro · ativo' : 'Conheça o Além Pro'}
+            </Txt>
+            <Txt variant="caption" color={colors.textOnStrongMuted}>
+              Biblioteca do Método 3P, assistente e relatório em PDF
+            </Txt>
+          </View>
+          <ChevronRight size={18} color={colors.textOnStrongMuted} />
+        </Row>
+      </Card>
+
       <Txt variant="label">Seu acompanhamento</Txt>
       <Card style={{ paddingVertical: space.sm, gap: 0 }}>
         <Item icon={UserRound} label="Meus dados" onPress={() => go('/meus-dados')} />
         <Divider />
         <Item icon={Pill} label="Meu tratamento" onPress={() => go('/tratamento')} />
+        <Divider />
+        <Item icon={BookOpen} label="Biblioteca do Método 3P" onPress={() => go('/biblioteca')} />
+        <Divider />
+        <Item icon={Sparkles} label="Pergunte ao método" onPress={() => go('/assistente')} />
       </Card>
 
       <Txt variant="label">Para seu médico</Txt>

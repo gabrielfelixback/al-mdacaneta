@@ -1,23 +1,26 @@
 import { router } from 'expo-router';
 import { TabList, TabSlot, Tabs, TabTrigger, type TabListProps, type TabTriggerSlotProps } from 'expo-router/ui';
-import { House, Pill, Plus, UserRound, UsersRound, Utensils, type LucideIcon } from 'lucide-react-native';
-import { forwardRef } from 'react';
+import { House, Plus, UserRound, UsersRound, Utensils } from 'lucide-react-native';
+import { forwardRef, type ComponentType } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { CapsuleIcon } from '@/components/Brand';
 import { Txt } from '@/components/Txt';
 import { tap } from '@/components/ui';
 import { colors, fonts, MAX_WIDTH, radius } from '@/theme/tokens';
 
-const TABS: { name: string; href: '/' | '/nutricao' | '/doses' | '/comunidade' | '/perfil'; label: string; icon: LucideIcon }[] = [
+type TabIcon = ComponentType<{ size?: number; color?: string; strokeWidth?: number }>;
+
+const TABS: { name: string; href: '/' | '/nutricao' | '/doses' | '/comunidade' | '/perfil'; label: string; icon: TabIcon }[] = [
   { name: 'index', href: '/', label: 'Hoje', icon: House },
   { name: 'nutricao', href: '/nutricao', label: 'Nutrição', icon: Utensils },
-  { name: 'doses', href: '/doses', label: 'Doses', icon: Pill },
+  { name: 'doses', href: '/doses', label: 'Doses', icon: CapsuleIcon },
   { name: 'comunidade', href: '/comunidade', label: 'Comunidade', icon: UsersRound },
   { name: 'perfil', href: '/perfil', label: 'Perfil', icon: UserRound },
 ];
 
-type TabButtonProps = TabTriggerSlotProps & { icon: LucideIcon; label: string };
+type TabButtonProps = TabTriggerSlotProps & { icon: TabIcon; label: string };
 
 const TabButton = forwardRef<View, TabButtonProps>(function TabButton({ icon: Icon, label, isFocused, onPress, ...props }, ref) {
   return (

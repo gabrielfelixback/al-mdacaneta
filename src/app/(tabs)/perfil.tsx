@@ -22,6 +22,7 @@ const RANGE_DAYS: Record<Range, number> = { '15d': 15, '2m': 61, '6m': 183, tudo
 export default function Profile() {
   const plan = usePlan();
   const weights = useStore((s) => s.weights);
+  const pro = useStore((s) => s.pro.active);
   const [range, setRange] = useState<Range>('tudo');
   const now = useNow(3_600_000);
   if (!plan) return null;
@@ -45,7 +46,16 @@ export default function Profile() {
         <Row>
           <Avatar name={profile.name} size={52} />
           <View style={{ flex: 1 }}>
-            <Txt variant="h2">{profile.name}</Txt>
+            <Row gap={space.sm}>
+              <Txt variant="h2">{profile.name}</Txt>
+              {pro ? (
+                <View style={{ backgroundColor: colors.cardStrong, borderRadius: radius.pill, paddingHorizontal: 8, paddingVertical: 2 }}>
+                  <Txt variant="caption" color={colors.textOnStrong} style={{ fontSize: 10 }}>
+                    PRO
+                  </Txt>
+                </View>
+              ) : null}
+            </Row>
             <Txt variant="small">
               {fmt(profile.heightCm / 100, 2)} m · {plan.age} anos
             </Txt>

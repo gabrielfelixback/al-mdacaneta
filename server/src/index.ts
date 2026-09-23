@@ -102,6 +102,66 @@ app.post('/api/analyze-meal', bodyLimit({ maxSize: 8 * 1024 * 1024 }), async (c)
   }
 });
 
+const ASSISTANT_SYSTEM = `Você é o assistente do app Além da Caneta, para adultos que usam medicamentos GLP-1 (tirzepatida, semaglutida e similares). Você ajuda a aplicar o Método 3P no dia a dia:
+- P1 · Priorizar proteína: fazer cada garfada contar quando o prato precisa ser pequeno.
+- P2 · Planejar refeições pequenas: o que comer, quando e como, mesmo sem vontade; hidratação, fibras e intestino em dia.
+- P3 · Preparar a transição: transformar o tratamento em hábitos que ficam quando a caneta sair.
+
+Tom: adulto, acolhedor, claro e técnico. Sem culpa, sem promessas, sem alarmismo, sem emojis. Português do Brasil. Respostas curtas e práticas (até ~150 palavras), com listas quando ajudar. Receitas trazem ingredientes em medidas caseiras e proteína aproximada por porção.
+
+Limites:
+- Não indique, ajuste, suspenda nem compare doses de medicamento, e não diga qual medicamento usar. Para isso, oriente a falar com quem prescreveu.
+- Não faça diagnóstico. Diante de sinais de alerta (dor abdominal forte e persistente, vômitos que não passam, vários dias sem evacuar com dor ou inchaço, sinais de desidratação, reação alérgica), recomende atendimento médico imediato.
+- Não dê orientação a menores de 18 anos, gestantes ou lactantes além de recomendar acompanhamento profissional.
+- Não comente o corpo da pessoa nem use números de peso como meta de valor.
+
+Use o contexto do app (metas e registros do dia) quando for relevante, sem repeti-lo por inteiro.`;
+
+app.post('/api/assistant', bodyLimit({ maxSize: 256 * 1024 }), async (c) => {
+  const body = await c.req
+    .json<{ messages?: { role: 'user' | 'assistant'; text: string }[]; context?: string }>()
+    .catch(() => null);
+  const history = (body?.messages ?? [])
+    .filter((m) => (m.role === 'user' || m.role === 'assistant') && typeof m.text === 'string' && m.text.trim())
+    .slice(-20)
+    .map((m) => ({ role: m.role, content: m.text.slice(0, 4000) }));
+  // A conversa precisa começar pela pessoa e terminar numa pergunta dela.
+  while (history.length && history[0].role !== 'user') history.shift();
+  if (!history.length || history[history.length - 1].role !== 'user') {
+    return c.text('Envie a pergunta em "messages".', 400);
+  }
+  const context = body?.context?.slice(0, 2000);
+
+  try {
+    const response = await client.beta.messages.create({
+      model: 'claude-opus-5',
+      max_tokens: 16000,
+      betas: ['server-side-fallback-2026-07-01'],
+      fallbacks: 'default',
+      thinking: { type: 'adaptive' },
+      output_config: { effort: 'medium' },
+      system: context ? `${ASSISTANT_SYSTEM}\n\nContexto do app:\n${context}` : ASSISTANT_SYSTEM,
+      messages: history,
+    });
+    if (response.stop_reason === 'refusal') {
+      return c.json({ text: 'Não consigo ajudar com isso por aqui. Para dúvidas sobre o tratamento, fale com quem te acompanha.' });
+    }
+    const text = response.content
+      .flatMap((b) => (b.type === 'text' ? [b.text] : []))
+      .join('\n')
+      .trim();
+    return c.json({ text: text || 'Não consegui responder agora. Tente reformular a pergunta.' });
+  } catch (err) {
+    if (err instanceof Anthropic.RateLimitError) return c.text('Muitas perguntas ao mesmo tempo. Tente de novo em instantes.', 429);
+    if (err instanceof Anthropic.APIError) {
+      console.error('Claude API error', err.status, err.message);
+      return c.text('Assistente indisponível no momento.', 502);
+    }
+    console.error(err);
+    return c.text('Erro inesperado no assistente.', 500);
+  }
+});
+
 if (!process.env.ANTHROPIC_API_KEY) {
   console.warn('ANTHROPIC_API_KEY não definida: /api/analyze-meal vai falhar até você configurá-la em server/.env.');
 }

@@ -10,8 +10,10 @@ import type {
   CheckIn,
   DoseLog,
   MealEntry,
+  ChatMessage,
   Poll,
   Post,
+  ProState,
   Profile,
   Reminder,
   SideEffectLog,
@@ -33,6 +35,10 @@ export interface AppState {
   posts: Post[];
   polls: Poll[];
   settings: { cupMl: number; healthSync: boolean };
+  pro: ProState;
+  chat: ChatMessage[];
+  /** Perguntas ao assistente por dia (limite do plano gratuito). */
+  assistantUsage: Record<string, number>;
 
   completeOnboarding: (p: Profile, t: Treatment, firstDose?: { at: string; mg: number }) => void;
   updateProfile: (p: Partial<Profile>) => void;
@@ -60,6 +66,11 @@ export interface AppState {
   addComment: (postId: string, body: string) => void;
   votePoll: (pollId: string, optionId: string) => void;
 
+  setPro: (p: ProState) => void;
+  addChat: (m: Omit<ChatMessage, 'id' | 'at'>) => void;
+  clearChat: () => void;
+  countAssistantUse: (day: string) => void;
+
   reset: () => void;
 }
 
@@ -77,6 +88,9 @@ const initial = {
   posts: SEED_POSTS,
   polls: SEED_POLLS,
   settings: { cupMl: 250, healthSync: false },
+  pro: { active: false },
+  chat: [],
+  assistantUsage: {},
 } satisfies Partial<AppState>;
 
 const byDateDesc = <T extends { at: string }>(a: T, b: T) => b.at.localeCompare(a.at);
@@ -180,11 +194,19 @@ export const useStore = create<AppState>()(
           ),
         })),
 
+      setPro: (pro) => set(() => ({ pro })),
+      addChat: (m) => set((s) => ({ chat: [...s.chat, { id: uid(), at: new Date().toISOString(), ...m }].slice(-60) })),
+      clearChat: () => set(() => ({ chat: [] })),
+      countAssistantUse: (day) =>
+        set((s) => ({ assistantUsage: { [day]: (s.assistantUsage[day] ?? 0) + 1 } })),
+
       reset: () => set(() => ({ ...initial })),
     }),
     {
       name: 'alem-da-caneta',
-      version: 1,
+      version: 2,
+      // v1 → v2: campos da assinatura Pro e do assistente.
+      migrate: (persisted) => ({ pro: { active: false }, chat: [], assistantUsage: {}, ...(persisted as object) }) as unknown as AppState,
       storage: createJSONStorage(() => AsyncStorage),
     },
   ),
@@ -213,7 +235,9 @@ export function dayTotals(meals: MealEntry[]) {
   );
 }
 
-export function activeDays(s: AppState): Set<string> {
+export function activeDays(
+  s: Pick<AppState, 'meals' | 'activities' | 'water' | 'weights' | 'doses' | 'checkins'>,
+): Set<string> {
   const days = new Set<string>();
   s.meals.forEach((m) => days.add(m.day));
   s.activities.forEach((a) => days.add(a.day));

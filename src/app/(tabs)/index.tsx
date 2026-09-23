@@ -1,100 +1,210 @@
-import { router } from 'expo-router';
-import { ArrowDown, ArrowUp, Plus, Sparkles } from 'lucide-react-native';
-import { View } from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
+import { setStatusBarStyle } from 'expo-status-bar';
+import { Flame, Settings, Sparkles } from 'lucide-react-native';
+import { useCallback, useMemo } from 'react';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useShallow } from 'zustand/react/shallow';
 
+import { CapsuleMark, Wordmark } from '@/components/Brand';
 import { ActivityCard } from '@/components/cards/ActivityCard';
 import { CheckInCard } from '@/components/cards/CheckInCard';
-import { NextDoseCard } from '@/components/cards/NextDoseCard';
-import { NutritionCard } from '@/components/cards/NutritionCard';
-import { WaterCard } from '@/components/cards/WaterCard';
-import { TabScreen } from '@/components/Screen';
-import { HeaderActions } from '@/components/StreakBadge';
+import { MoveTile, ProteinTile, WaterTile, WeightTile } from '@/components/home/Bento';
+import { LibraryRail } from '@/components/home/LibraryRail';
+import { NextStepCard } from '@/components/home/NextStep';
+import { WeekJourney } from '@/components/home/WeekJourney';
+import { TAB_BAR_SPACE } from '@/components/Screen';
 import { Txt } from '@/components/Txt';
-import { Card, Disclaimer, IconButton, ProgressBar, Row, Stat } from '@/components/ui';
+import { Disclaimer, IconButton, Row, tap } from '@/components/ui';
+import { useNow } from '@/hooks/useNow';
 import { usePlan } from '@/hooks/usePlan';
-import { fmt } from '@/lib/calc';
-import { dayKey, formatShort, greeting, WEEKDAYS_LONG } from '@/lib/dates';
-import { tipOfDay } from '@/lib/tips';
-import { treatmentWeek } from '@/lib/treatment';
-import { useStore } from '@/store/useStore';
-import { colors, radius, space } from '@/theme/tokens';
+import { fmtMg } from '@/lib/calc';
+import { dayKey, formatCountdown, formatShort, greeting, WEEKDAYS_LONG } from '@/lib/dates';
+import { medicationLabel, nextDoseInfo, treatmentWeek } from '@/lib/treatment';
+import { activeDays, streak, useStore } from '@/store/useStore';
+import { colors, MAX_WIDTH, palette, radius, space } from '@/theme/tokens';
 
 export default function Today() {
+  const insets = useSafeAreaInsets();
   const plan = usePlan();
-  const treatment = useStore((s) => s.treatment);
-  const today = dayKey();
-  const now = new Date();
-  const tip = tipOfDay(now);
+  const now = useNow();
+  const today = dayKey(now);
+  // Topo escuro: barra de status clara só enquanto esta aba está em foco.
+  useFocusEffect(
+    useCallback(() => {
+      setStatusBarStyle('light');
+      return () => setStatusBarStyle('dark');
+    }, []),
+  );
   if (!plan) return null;
-  const first = plan.profile.name.split(' ')[0];
 
   return (
-    <TabScreen
-      title={`${greeting(now)},`}
-      italicWord={first}
-      right={<HeaderActions />}
-      subtitle={
-        <Txt variant="small" style={{ marginTop: 4 }}>
-          {WEEKDAYS_LONG[now.getDay()]}, {formatShort(now)}
-          {treatment ? ` · semana ${treatmentWeek(treatment, now)} do tratamento` : ''}
-        </Txt>
-      }>
-      <NextDoseCard />
-      <WeightMini />
-      <WaterCard day={today} />
-      <NutritionCard day={today} compact />
-      <CheckInCard day={today} />
-      <ActivityCard day={today} />
+    <ScrollView
+      style={{ flex: 1, backgroundColor: colors.bg }}
+      contentContainerStyle={{ paddingBottom: insets.bottom + TAB_BAR_SPACE }}
+      showsVerticalScrollIndicator={false}>
+      <Hero now={now} top={insets.top} />
+      <View style={styles.body}>
+        <NextStepCard now={now} />
 
-      <Card tone="soft" style={{ gap: space.sm }}>
-        <Row gap={space.sm}>
-          <Sparkles size={16} color={colors.accent} />
-          <Txt variant="label" color={colors.accent}>
-            Método 3P · {tip.p}
-          </Txt>
-        </Row>
-        <Txt variant="h2">{tip.title}</Txt>
-        <Txt variant="small">{tip.body}</Txt>
-      </Card>
-      <Disclaimer />
-    </TabScreen>
+        <View style={{ flexDirection: 'row', gap: space.md }}>
+          <ProteinTile day={today} />
+          <View style={{ flex: 1, gap: space.md }}>
+            <WaterTile day={today} />
+            <MoveTile day={today} />
+          </View>
+        </View>
+        <WeightTile />
+
+        <CheckInCard day={today} />
+        <LibraryRail />
+        <AssistantTeaser />
+        <ActivityCard day={today} />
+        <Disclaimer />
+      </View>
+    </ScrollView>
   );
 }
 
-function WeightMini() {
+function Hero({ now, top }: { now: Date; top: number }) {
   const plan = usePlan()!;
-  const start = plan.profile.startWeightKg;
-  const goal = plan.profile.goalWeightKg;
-  const delta = plan.weight - start;
-  const progress = start > goal ? (start - plan.weight) / (start - goal) : 0;
+  const treatment = useStore((s) => s.treatment);
+  const doses = useStore((s) => s.doses);
+  const logs = useStore(
+    useShallow((s) => ({ meals: s.meals, activities: s.activities, water: s.water, weights: s.weights, doses: s.doses, checkins: s.checkins })),
+  );
+  const days = useMemo(() => activeDays(logs), [logs]);
+  const n = useStore(streak);
+  const first = plan.profile.name.split(' ')[0];
+  const doseDays = new Set(doses.map((d) => dayKey(new Date(d.at))));
+  const info = treatment ? nextDoseInfo(treatment, doses, now) : null;
+  if (info && !info.overdue) doseDays.add(dayKey(info.next));
+  const cd = info ? formatCountdown(info.next.getTime() - now.getTime()) : null;
 
   return (
-    <Card onPress={() => router.push('/perfil')}>
-      <Row style={{ justifyContent: 'space-between' }}>
-        <Row gap={space.xl}>
-          <Stat label="Peso atual" value={fmt(plan.weight)} unit="kg" />
-          <Stat label="Meta" value={fmt(goal)} unit="kg" />
-          {delta !== 0 ? (
-            <View
-              style={{
-                flexDirection: 'row',
-                alignItems: 'center',
-                gap: 2,
-                backgroundColor: colors.bgAlt,
-                paddingHorizontal: 10,
-                paddingVertical: 4,
-                borderRadius: radius.pill,
-              }}>
-              {delta <= 0 ? <ArrowDown size={14} color={colors.text} /> : <ArrowUp size={14} color={colors.text} />}
-              <Txt variant="caption" color={colors.text}>
-                {fmt(Math.abs(delta))} kg
+    <View style={[styles.hero, { paddingTop: top + space.md }]}>
+      <View style={styles.heroInner}>
+        <Row style={{ justifyContent: 'space-between' }}>
+          <Wordmark size={17} color={colors.textOnStrong} />
+          <Row gap={space.sm}>
+            <View style={styles.streak}>
+              <Flame size={14} color={n > 0 ? palette.argila : colors.textOnStrongMuted} />
+              <Txt variant="bodyStrong" color={colors.textOnStrong} style={{ fontSize: 14 }}>
+                {n}
               </Txt>
             </View>
-          ) : null}
+            <IconButton icon={Settings} tone="onStrong" size={36} label="Configurações" onPress={() => router.push('/configuracoes')} />
+          </Row>
         </Row>
-        <IconButton icon={Plus} size={34} label="Registrar peso" onPress={() => router.push('/peso')} />
-      </Row>
-      <ProgressBar value={progress} color={colors.cardStrong} height={6} />
-    </Card>
+
+        <View style={{ marginTop: space.xl }}>
+          <Txt variant="h2" color={colors.textOnStrongMuted}>
+            {greeting(now)},
+          </Txt>
+          <Txt italic color={colors.textOnStrong} style={{ fontSize: 60, lineHeight: 64 }}>
+            {first}
+          </Txt>
+          <Txt variant="small" color={colors.textOnStrongMuted}>
+            {WEEKDAYS_LONG[now.getDay()]}, {formatShort(now)}
+            {treatment ? ` · semana ${treatmentWeek(treatment, now)} do tratamento` : ''}
+          </Txt>
+        </View>
+
+        <View style={{ marginTop: space.lg, marginHorizontal: -space.sm }}>
+          <WeekJourney activeDays={days} doseDays={doseDays} today={now} />
+        </View>
+
+        {treatment && info && cd ? (
+          <Pressable
+            onPress={() => {
+              tap();
+              router.push(info.overdue ? '/aplicacao' : '/doses');
+            }}
+            style={({ pressed }) => [styles.dosePill, pressed && { opacity: 0.85 }]}>
+            <CapsuleMark size={16} color={colors.textOnStrong} progress={info.overdue ? 1 : Math.max(0.1, info.progress)} animate />
+            <View style={{ flex: 1 }}>
+              <Txt variant="caption" color={colors.textOnStrongMuted}>
+                {info.overdue ? 'Aplicação de hoje' : 'Próxima aplicação'} · {medicationLabel(treatment)} {fmtMg(treatment.doseMg)}
+              </Txt>
+              <Txt variant="bodyStrong" color={colors.textOnStrong} style={{ fontSize: 17 }}>
+                {info.overdue ? 'Toque para registrar' : `${cd.big} e ${cd.small}`}
+              </Txt>
+            </View>
+          </Pressable>
+        ) : null}
+      </View>
+    </View>
   );
 }
+
+function AssistantTeaser() {
+  return (
+    <Pressable
+      onPress={() => {
+        tap();
+        router.push('/assistente');
+      }}
+      style={({ pressed }) => [styles.assistant, pressed && { opacity: 0.9 }]}>
+      <View style={styles.assistantIcon}>
+        <Sparkles size={20} color={palette.argila} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Txt variant="h3" color={colors.textOnStrong}>
+          Pergunte ao{' '}
+          <Txt variant="h3" italic color={colors.support} style={{ fontSize: 19 }}>
+            método
+          </Txt>
+        </Txt>
+        <Txt variant="caption" color={colors.textOnStrongMuted}>
+          “O que comer hoje sem fome?” · “Receita com 30 g de proteína”
+        </Txt>
+      </View>
+    </Pressable>
+  );
+}
+
+const styles = StyleSheet.create({
+  hero: {
+    backgroundColor: colors.cardStrong,
+    borderBottomLeftRadius: 36,
+    borderBottomRightRadius: 36,
+    paddingBottom: space.xl,
+  },
+  heroInner: { width: '100%', maxWidth: MAX_WIDTH, alignSelf: 'center', paddingHorizontal: space.lg },
+  body: { width: '100%', maxWidth: MAX_WIDTH, alignSelf: 'center', paddingHorizontal: space.lg, gap: space.md, marginTop: space.lg },
+  streak: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    height: 36,
+    paddingHorizontal: 12,
+    borderRadius: radius.pill,
+    backgroundColor: colors.trackOnStrong,
+  },
+  dosePill: {
+    marginTop: space.md,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    backgroundColor: colors.trackOnStrong,
+    borderRadius: radius.lg,
+    paddingVertical: space.md,
+    paddingHorizontal: space.lg,
+  },
+  assistant: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space.md,
+    backgroundColor: colors.cardStrong,
+    borderRadius: radius.lg,
+    padding: space.lg,
+  },
+  assistantIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: colors.trackOnStrong,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
