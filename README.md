@@ -1,0 +1,92 @@
+# além da caneta · app
+
+> O remédio cuida da fome. O resto é *método*.
+
+App de acompanhamento para quem usa canetas GLP-1 (tirzepatida, semaglutida, liraglutida, dulaglutida). Registra doses, água, peso/IMC, refeições (inclusive por foto), movimento e como a pessoa se sente, com a identidade do guia de marca Além da Caneta e o Método 3P no centro.
+
+Feito em **Expo SDK 57 + Expo Router**, roda em iOS, Android e web (preview).
+
+## O que já funciona
+
+| Área | Recursos |
+| --- | --- |
+| **Onboarding** | Nome, sexo, idade, altura, peso, meta, nível de atividade, medicamento/dose/dia/horário e última aplicação. Gera o plano diário (energia, proteína, água, fibras). |
+| **Hoje** | Contagem para a próxima aplicação, peso × meta, copos de água, anel de proteína (P1), check-in de energia/fome/intestino com alertas, movimento da semana, dica do Método 3P, sequência de dias. |
+| **Nutrição** | Calendário semanal (marca dias de aplicação), resumo de macros, refeições por período. Registro por **busca** na base local (TACO), **foto do prato com IA** ou **manual**. |
+| **Doses** | Próxima aplicação, **nível estimado no corpo** (curva por meia-vida), **rodízio de locais**, calculadora de UI para seringa U-100, efeitos colaterais, histórico de aplicações. |
+| **Comunidade** | Postagens com temas, curtidas, comentários, enquetes e combinados da comunidade. *Dados locais de demonstração por enquanto.* |
+| **Perfil** | Peso atual e progresso, IMC com régua OMS, curva de peso (15D/2M/6M/Tudo), “Além da balança” (7 dias), registros de peso, relatório para o médico (compartilhar/copiar). |
+| **Saúde do sistema** | Apple Saúde (iOS) e Health Connect (Android): lê passos, calorias ativas e peso; grava peso e água. |
+| **Referências médicas** | ANVISA, FDA/DailyMed, NIDDK, OMS, SURMOUNT-1/4, SURPASS-2, STEP-1, ISSN, Mifflin-St Jeor, Compendium, TACO. |
+
+### Cálculos (`src/lib/calc.ts`)
+
+- **IMC** = peso ÷ altura², classificação OMS.
+- **Basal**: Mifflin-St Jeor. **Meta calórica**: basal × fator de atividade − 500 kcal, com piso de 1200 (F) / 1500 (M).
+- **Proteína (P1)**: 1,5 g/kg; com IMC ≥ 30 usa peso ajustado (peso no IMC 25 + 25% do excedente).
+- **Água**: 35 ml/kg. **Fibras**: 25 g (F) / 30 g (M).
+- **Atividade**: MET (Compendium) × peso × horas, por tipo e intensidade (leve/moderado/intenso).
+- **Nível do medicamento**: soma das doses decaindo pela meia-vida (tirzepatida ~5 d, semaglutida ~7 d, liraglutida ~13 h). Estimativa educacional.
+- **Calculadora de doses**: mg ÷ (mg/mL) × 100 = UI.
+
+## Rodando
+
+```bash
+npm install
+npm run web        # preview no navegador
+npm run ios        # simulador / Expo Go (sem Apple Saúde)
+npm run android    # emulador / Expo Go (sem Health Connect)
+```
+
+A integração com Apple Saúde e Health Connect usa módulos nativos e **não roda no Expo Go**. Gere um development build:
+
+```bash
+npx eas-cli@latest build --profile development --platform ios     # ou android
+```
+
+### Foto do prato (IA)
+
+A análise de foto usa a API do Claude (`claude-opus-5`, saída estruturada) num servidor próprio. A chave nunca vai para o app.
+
+```bash
+cd server
+cp .env.example .env     # preencha ANTHROPIC_API_KEY
+npm install
+npm run dev              # http://localhost:8787
+```
+
+No app, aponte para o servidor:
+
+```bash
+EXPO_PUBLIC_API_URL=http://SEU-IP:8787 npm start
+```
+
+Endpoint: `POST /api/analyze-meal` com `{ image: <base64>, mediaType: "image/jpeg", context?: string }` → itens com porção, gramas, kcal, proteína, carboidratos, gordura e fibras, mais confiança e uma dica curta.
+
+## Estrutura
+
+```
+src/
+  app/                 rotas (Expo Router)
+    (tabs)/            Hoje, Nutrição, Doses, Comunidade, Perfil
+    onboarding.tsx     primeiro acesso
+    registrar.tsx      menu rápido do botão +
+    refeicao.tsx       busca, foto (IA) e manual
+    peso, atividade, aplicacao, efeito, publicar, ...
+  components/          UI da marca, cards e gráficos (SVG)
+  lib/                 cálculos, medicamentos, alimentos, referências, saúde (ios/android/web)
+  store/               estado com zustand + AsyncStorage (offline-first)
+  theme/tokens.ts      paleta, tipografia e espaçamentos do guia de marca
+server/                API de análise de refeição por foto (Hono + Anthropic SDK)
+```
+
+## Marca
+
+Paleta 60/30/10 (Creme/Linho · Floresta/Sálvia/Musgo · Argila só como acento), Instrument Serif (itálico só na palavra-chave) e Instrument Sans. Seguindo o “fora da marca”: sem emojis, sem ilustração de agulha/seringa ou balança/fita métrica, sem antes/depois e sem gradientes saturados. Todas as telas de saúde trazem o aviso de que o app não substitui acompanhamento médico e nutricional.
+
+## Próximos passos
+
+- Backend real (contas, sincronização e comunidade com moderação) — ex.: Supabase.
+- Lembretes com notificações locais (aplicação, água, suplementos).
+- Plano do Depois (P3) guiado, conteúdo do Método 3P dentro do app, assinatura.
+- Busca de alimentos ampliada (TACO completa + códigos de barras).

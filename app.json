@@ -1,0 +1,83 @@
+{
+  "expo": {
+    "name": "Além da Caneta",
+    "slug": "alem-da-caneta",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "alemdacaneta",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#F4F0E8",
+    "ios": {
+      "bundleIdentifier": "br.com.alemdacaneta.app",
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSCameraUsageDescription": "Usamos a câmera para fotografar seu prato e estimar calorias e proteína.",
+        "NSPhotoLibraryUsageDescription": "Usamos suas fotos para estimar calorias e proteína de uma refeição."
+      }
+    },
+    "android": {
+      "package": "br.com.alemdacaneta.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#17332B",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "backgroundImage": "./assets/images/android-icon-background.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "permissions": [
+        "android.permission.health.READ_STEPS",
+        "android.permission.health.READ_ACTIVE_CALORIES_BURNED",
+        "android.permission.health.READ_WEIGHT",
+        "android.permission.health.WRITE_WEIGHT",
+        "android.permission.health.WRITE_HYDRATION"
+      ],
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "static",
+      "favicon": "./assets/images/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#17332B",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 160
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Usamos a câmera para fotografar seu prato e estimar calorias e proteína.",
+          "photosPermission": "Usamos suas fotos para estimar calorias e proteína de uma refeição.",
+          "microphonePermission": false
+        }
+      ],
+      [
+        "@kingstinct/react-native-healthkit",
+        {
+          "NSHealthShareUsageDescription": "O Além da Caneta lê passos, calorias ativas e peso para completar seu acompanhamento.",
+          "NSHealthUpdateUsageDescription": "O Além da Caneta salva seu peso e sua água no Apple Saúde.",
+          "background": false
+        }
+      ],
+      "react-native-health-connect",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "compileSdkVersion": 36,
+            "targetSdkVersion": 36,
+            "minSdkVersion": 26
+          }
+        }
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    }
+  }
+}
