@@ -1,10 +1,10 @@
-import * as WebBrowser from 'expo-web-browser';
 import { router, useLocalSearchParams } from 'expo-router';
 import { Clock, Lock } from 'lucide-react-native';
 import { useState } from 'react';
 import { Pressable, View } from 'react-native';
 
 import { BookCover } from '@/components/Brand';
+import { ExternalLink } from '@/components/ExternalLink';
 import { StackScreen } from '@/components/Screen';
 import { Txt } from '@/components/Txt';
 import { Button, Card, Row, tap } from '@/components/ui';
@@ -75,7 +75,11 @@ export default function Library() {
               </Txt>
             </Row>
           ) : selected.url ? (
-            <Button label="Abrir PDF" onPress={() => WebBrowser.openBrowserAsync(selected.url!).catch(() => {})} />
+            <ExternalLink href={selected.url}>
+              <View pointerEvents="none">
+                <Button label="Abrir PDF" />
+              </View>
+            </ExternalLink>
           ) : (
             <Txt variant="small" color={colors.accent}>
               PDF em preparação — chega aqui em breve.

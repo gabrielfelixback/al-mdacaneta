@@ -9,7 +9,11 @@ import { Txt } from './Txt';
 
 function useWidth(initial = 300) {
   const [w, setW] = useState(initial);
-  const onLayout = (e: LayoutChangeEvent) => setW(Math.round(e.nativeEvent.layout.width));
+  // Telas ainda escondidas medem 0 de largura; mantém a última medida válida.
+  const onLayout = (e: LayoutChangeEvent) => {
+    const next = Math.round(e.nativeEvent.layout.width);
+    if (next > 0) setW(next);
+  };
   return [w, onLayout] as const;
 }
 
@@ -252,7 +256,7 @@ export function WeekBars({
   const [width, onLayout] = useWidth(240);
   const max = Math.max(goal ?? 0, ...values, 1);
   const gap = 8;
-  const bw = (width - gap * 6) / 7;
+  const bw = Math.max(2, (width - gap * 6) / 7);
   const barH = height - 18;
   return (
     <View onLayout={onLayout}>

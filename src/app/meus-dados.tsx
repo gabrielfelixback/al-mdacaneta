@@ -1,17 +1,18 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 
+import { requireSetup } from '@/components/RequireSetup';
 import { StackScreen } from '@/components/Screen';
 import { Txt } from '@/components/Txt';
 import { Button, Card, Chip, Field, Row } from '@/components/ui';
 import { usePlan } from '@/hooks/usePlan';
 import { ACTIVITY_LEVEL_LABEL, fmt, fmtInt, type ActivityLevel, type Sex } from '@/lib/calc';
 import { dismiss } from '@/lib/nav';
-import { parseNum } from '@/lib/parse';
+import { heightCm, parseNum } from '@/lib/parse';
 import { useStore } from '@/store/useStore';
 import { space } from '@/theme/tokens';
 
-export default function MyData() {
+function MyData() {
   const profile = useStore((s) => s.profile)!;
   const update = useStore((s) => s.updateProfile);
   const plan = usePlan();
@@ -23,7 +24,7 @@ export default function MyData() {
   const [start, setStart] = useState(fmt(profile.startWeightKg));
   const [level, setLevel] = useState<ActivityLevel>(profile.activityLevel);
 
-  const h = parseNum(height);
+  const h = heightCm(height);
   const g = parseNum(goal);
   const st = parseNum(start);
   const by = parseNum(birthYear);
@@ -70,3 +71,5 @@ export default function MyData() {
     </StackScreen>
   );
 }
+
+export default requireSetup(MyData);

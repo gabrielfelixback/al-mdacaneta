@@ -56,7 +56,8 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
-    "server": "npm --prefix server run dev"
+    "server": "npm --prefix server run dev",
+    "build:teste": "node scripts/build-test-html.mjs"
   },
   "private": true
 }

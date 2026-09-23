@@ -11,7 +11,10 @@ import { colors, fonts, palette } from '@/theme/tokens';
  */
 export function WeekJourney({ activeDays, doseDays, today = new Date() }: { activeDays: Set<string>; doseDays: Set<string>; today?: Date }) {
   const [w, setW] = useState(320);
-  const onLayout = (e: LayoutChangeEvent) => setW(Math.round(e.nativeEvent.layout.width));
+  const onLayout = (e: LayoutChangeEvent) => {
+    const next = Math.round(e.nativeEvent.layout.width);
+    if (next > 0) setW(next);
+  };
   const h = 96;
   const padX = 18;
   const week = startOfWeek(today);

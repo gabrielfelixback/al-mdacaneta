@@ -8,7 +8,7 @@ import { colors, MAX_WIDTH, space } from '@/theme/tokens';
 import { Txt } from './Txt';
 import { IconButton } from './ui';
 
-export const TAB_BAR_SPACE = 120;
+export const TAB_BAR_SPACE = 190;
 
 /** Tela de aba: título grande em serifa + conteúdo rolável. */
 export function TabScreen({

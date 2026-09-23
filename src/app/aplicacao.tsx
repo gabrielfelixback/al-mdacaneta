@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 
+import { requireSetup } from '@/components/RequireSetup';
 import { ModalScreen } from '@/components/Screen';
 import { Txt } from '@/components/Txt';
 import { Button, Card, Chip, Field } from '@/components/ui';
@@ -17,7 +18,7 @@ const WHEN = [
   { v: 2, label: 'Há 2 dias' },
 ];
 
-export default function LogDose() {
+function LogDose() {
   const treatment = useStore((s) => s.treatment)!;
   const doses = useStore((s) => s.doses);
   const logDose = useStore((s) => s.logDose);
@@ -73,3 +74,5 @@ export default function LogDose() {
     </ModalScreen>
   );
 }
+
+export default requireSetup(LogDose);

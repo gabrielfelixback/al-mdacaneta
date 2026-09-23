@@ -2,7 +2,7 @@
 import type { AppState } from '@/store/useStore';
 import { dayTotals } from '@/store/useStore';
 import { bmi, BMI_LABEL, bmiClass, fmt, fmtInt, fmtMg, nutritionGoals } from './calc';
-import { dayKey, formatDDMM, formatTime, WEEKDAYS_LONG } from './dates';
+import { dayKey, formatDDMM, formatTime, fromDayKey, WEEKDAYS_LONG } from './dates';
 import { getMedication, INGREDIENT_LABEL, siteLabel } from './medications';
 import { medicationLabel, nextDoseInfo } from './treatment';
 
@@ -114,9 +114,9 @@ export function buildReportHtml(s: Data, period: ReportPeriod, sections: Set<Rep
   const protDaysPct = mealDays.length
     ? Math.round((mealDays.filter((d) => tot(d).protein >= goals.protein * 0.9).length / mealDays.length) * 100)
     : 0;
-  const waterDays = Object.entries(s.water).filter(([d, ml]) => ml > 0 && new Date(d).getTime() >= fromMs - 86_400_000);
+  const waterDays = Object.entries(s.water).filter(([d, ml]) => ml > 0 && fromDayKey(d).getTime() >= fromMs);
   const avgWater = waterDays.length ? waterDays.reduce((a, [, ml]) => a + ml, 0) / waterDays.length : 0;
-  const checkDays = Object.entries(s.checkins).filter(([d]) => new Date(d).getTime() >= fromMs - 86_400_000);
+  const checkDays = Object.entries(s.checkins).filter(([d]) => fromDayKey(d).getTime() >= fromMs);
   const gut = checkDays.reduce<Record<string, number>>((acc, [, c]) => {
     if (c.gut) acc[c.gut] = (acc[c.gut] ?? 0) + 1;
     return acc;

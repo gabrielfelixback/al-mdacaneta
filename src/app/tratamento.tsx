@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { View } from 'react-native';
 
+import { requireSetup } from '@/components/RequireSetup';
 import { StackScreen } from '@/components/Screen';
 import { Txt } from '@/components/Txt';
 import { Button, Chip, Field } from '@/components/ui';
@@ -13,7 +14,7 @@ import { halfLifeLabel } from '@/lib/treatment';
 import { useStore } from '@/store/useStore';
 import { space } from '@/theme/tokens';
 
-export default function TreatmentSettings() {
+function TreatmentSettings() {
   const t = useStore((s) => s.treatment)!;
   const update = useStore((s) => s.updateTreatment);
   const [medId, setMedId] = useState(t.medicationId);
@@ -77,3 +78,5 @@ export default function TreatmentSettings() {
     </StackScreen>
   );
 }
+
+export default requireSetup(TreatmentSettings);

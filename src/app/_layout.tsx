@@ -10,23 +10,30 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { ToastHost } from '@/components/ToastHost';
 import { useHydrated } from '@/store/useHydrated';
 import { useStore } from '@/store/useStore';
 import { colors } from '@/theme/tokens';
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
+const FONTS = {
+  InstrumentSerif_400Regular,
+  InstrumentSerif_400Regular_Italic,
+  InstrumentSans_400Regular,
+  InstrumentSans_500Medium,
+  InstrumentSans_600SemiBold,
+  InstrumentSans_700Bold,
+};
+
+// Na versão web autocontida (link de teste) as fontes já vêm embutidas no HTML.
+const FONTS_INLINED = Platform.OS === 'web' && process.env.EXPO_PUBLIC_INLINE_FONTS === '1';
+
 export default function RootLayout() {
-  const [fontsLoaded, fontError] = useFonts({
-    InstrumentSerif_400Regular,
-    InstrumentSerif_400Regular_Italic,
-    InstrumentSans_400Regular,
-    InstrumentSans_500Medium,
-    InstrumentSans_600SemiBold,
-    InstrumentSans_700Bold,
-  });
+  const [fontsLoaded, fontError] = useFonts(FONTS_INLINED ? {} : FONTS);
   const hydrated = useHydrated();
   const onboarded = useStore((s) => s.profile !== null);
   const ready = (fontsLoaded || !!fontError) && hydrated;
@@ -68,6 +75,7 @@ export default function RootLayout() {
           <Stack.Screen name="assistente" />
         </Stack.Protected>
       </Stack>
+      <ToastHost />
     </SafeAreaProvider>
   );
 }

@@ -9,6 +9,7 @@ import { Txt } from '@/components/Txt';
 import { IconButton, Row, tap } from '@/components/ui';
 import { useNow } from '@/hooks/useNow';
 import { usePlan } from '@/hooks/usePlan';
+import { API_URL } from '@/lib/api';
 import { askAssistant, FREE_DAILY_QUESTIONS } from '@/lib/assistant';
 import { fmtInt, fmtMg } from '@/lib/calc';
 import { dayKey } from '@/lib/dates';
@@ -75,6 +76,10 @@ export default function Assistant() {
   async function send(q: string) {
     const question = q.trim();
     if (!question || busy) return;
+    if (!API_URL) {
+      setError('O assistente ainda não está ligado nesta versão de teste.');
+      return;
+    }
     if (blocked) return router.push('/pro');
     tap();
     setText('');
@@ -119,6 +124,12 @@ export default function Assistant() {
 
       <ScrollView ref={scroll} contentContainerStyle={{ paddingVertical: space.lg }} keyboardShouldPersistTaps="handled">
         <View style={[styles.inner, { gap: space.md }]}>
+          {!API_URL ? (
+            <View style={{ backgroundColor: colors.bgAlt, borderRadius: radius.md, padding: space.lg }}>
+              <Txt variant="bodyStrong">O assistente ainda não está ligado nesta versão de teste.</Txt>
+              <Txt variant="small">Você pode ver como ele funciona; as respostas chegam na próxima versão.</Txt>
+            </View>
+          ) : null}
           {chat.length === 0 ? (
             <View style={{ gap: space.sm }}>
               <Txt variant="small">

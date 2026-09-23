@@ -1,5 +1,6 @@
 // Cliente do endpoint de análise de refeição por foto (ver /server).
 // A chave da API do Claude fica só no servidor, nunca no app.
+import { postJson } from './api';
 
 export interface MealItem {
   name: string;
@@ -19,20 +20,6 @@ export interface MealAnalysis {
   tip: string;
 }
 
-export const MEAL_API_URL = process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, '');
-
 export async function analyzeMealPhoto(base64: string, mediaType: string, context?: string): Promise<MealAnalysis> {
-  if (!MEAL_API_URL) {
-    throw new Error('Servidor de análise não configurado (EXPO_PUBLIC_API_URL).');
-  }
-  const res = await fetch(`${MEAL_API_URL}/api/analyze-meal`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ image: base64, mediaType, context }),
-  });
-  if (!res.ok) {
-    const msg = await res.text().catch(() => '');
-    throw new Error(msg || `Falha na análise (${res.status}).`);
-  }
-  return (await res.json()) as MealAnalysis;
+  return postJson<MealAnalysis>('/api/analyze-meal', { image: base64, mediaType, context });
 }

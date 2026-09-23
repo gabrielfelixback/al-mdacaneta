@@ -10,7 +10,7 @@ export interface LibraryItem {
   tone: 'floresta' | 'linho' | 'salvia' | 'argila';
   /** Dias após a assinatura para liberar (ex.: Plano do Depois no 7º dia). */
   unlockAfterDays?: number;
-  url?: string;
+  url?: `https://${string}`;
 }
 
 export const LIBRARY: LibraryItem[] = [

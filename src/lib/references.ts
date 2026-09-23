@@ -4,7 +4,7 @@
 export interface Reference {
   title: string;
   source: string;
-  url: string;
+  url: `https://${string}`;
 }
 
 export interface ReferenceGroup {

@@ -13,12 +13,14 @@ import {
   UserRound,
   type LucideIcon,
 } from 'lucide-react-native';
-import { Alert, Platform, View } from 'react-native';
+import { useState } from 'react';
+import { View } from 'react-native';
 
 import { CapsuleMark, Wordmark } from '@/components/Brand';
 import { StackScreen } from '@/components/Screen';
 import { Txt } from '@/components/Txt';
 import { Card, Chip, Divider, PressableRow, Row } from '@/components/ui';
+import { notify } from '@/lib/notify';
 import { useStore } from '@/store/useStore';
 import { colors, space } from '@/theme/tokens';
 
@@ -37,22 +39,12 @@ function Item({ icon: Icon, label, onPress, danger, value }: { icon: LucideIcon;
   );
 }
 
-function confirm(title: string, msg: string, onOk: () => void) {
-  if (Platform.OS === 'web') {
-    if (window.confirm(`${title}\n\n${msg}`)) onOk();
-    return;
-  }
-  Alert.alert(title, msg, [
-    { text: 'Cancelar', style: 'cancel' },
-    { text: 'Apagar', style: 'destructive', onPress: onOk },
-  ]);
-}
-
 export default function Settings() {
   const cup = useStore((s) => s.settings.cupMl);
   const updateSettings = useStore((s) => s.updateSettings);
   const reset = useStore((s) => s.reset);
   const pro = useStore((s) => s.pro.active);
+  const [confirming, setConfirming] = useState(false);
   const go = (h: Href) => router.push(h);
 
   return (
@@ -109,8 +101,9 @@ export default function Settings() {
           icon={ShieldCheck}
           label="Privacidade"
           onPress={() =>
-            (Platform.OS === 'web' ? (t: string) => window.alert(t) : (t: string) => Alert.alert('Privacidade', t))(
-              'Nesta versão, seus registros ficam só no seu aparelho. Nada é enviado para servidores, exceto a foto do prato quando você pede a análise.',
+            notify(
+              'Privacidade',
+              'Nesta versão, seus registros ficam só no seu aparelho. Nada é enviado para servidores, exceto a foto do prato e as perguntas ao assistente, quando você usa esses recursos.',
             )
           }
         />
@@ -118,9 +111,17 @@ export default function Settings() {
         <Item
           icon={LogOut}
           danger
-          label="Apagar meus dados"
-          onPress={() => confirm('Apagar tudo?', 'Todos os registros deste aparelho serão apagados.', reset)}
+          label={confirming ? 'Toque de novo para apagar tudo' : 'Apagar meus dados'}
+          onPress={() => {
+            if (!confirming) return setConfirming(true);
+            reset();
+          }}
         />
+        {confirming ? (
+          <Txt variant="caption" color={colors.danger} style={{ paddingBottom: space.sm }}>
+            Todos os registros deste aparelho serão apagados e você volta ao cadastro inicial.
+          </Txt>
+        ) : null}
       </Card>
 
       <View style={{ alignItems: 'center', gap: space.sm, marginTop: space.xl }}>

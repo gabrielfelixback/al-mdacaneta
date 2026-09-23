@@ -1,5 +1,6 @@
 import { ImageManipulator, SaveFormat } from 'expo-image-manipulator';
 import * as ImagePicker from 'expo-image-picker';
+import { Platform } from 'react-native';
 
 export interface PickedPhoto {
   uri: string;
@@ -9,7 +10,8 @@ export interface PickedPhoto {
 
 /** Abre câmera ou galeria e devolve a foto reduzida (lado maior ≤ 1280 px) em JPEG base64. */
 export async function pickMealPhoto(source: 'camera' | 'galeria'): Promise<PickedPhoto | null> {
-  if (source === 'camera') {
+  // Na web o seletor de arquivo já oferece a câmera; pedir permissão ali costuma ser bloqueado.
+  if (source === 'camera' && Platform.OS !== 'web') {
     const perm = await ImagePicker.requestCameraPermissionsAsync();
     if (!perm.granted) throw new Error('Permita o acesso à câmera para fotografar o prato.');
   }

@@ -1,9 +1,9 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { activityKcal, type Intensity } from '@/lib/activities';
 import { dayKey, uid } from '@/lib/dates';
+import { safeStorage } from './safeStorage';
 import { SEED_POLLS, SEED_POSTS } from './seed';
 import type {
   ActivityLog,
@@ -207,7 +207,7 @@ export const useStore = create<AppState>()(
       version: 2,
       // v1 → v2: campos da assinatura Pro e do assistente.
       migrate: (persisted) => ({ pro: { active: false }, chat: [], assistantUsage: {}, ...(persisted as object) }) as unknown as AppState,
-      storage: createJSONStorage(() => AsyncStorage),
+      storage: createJSONStorage(() => safeStorage),
     },
   ),
 );

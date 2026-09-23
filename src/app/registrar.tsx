@@ -7,6 +7,7 @@ import { Txt } from '@/components/Txt';
 import { IconButton, tap } from '@/components/ui';
 import { dayKey } from '@/lib/dates';
 import { health } from '@/lib/health';
+import { dismiss } from '@/lib/nav';
 import { useStore } from '@/store/useStore';
 import { colors, MAX_WIDTH, radius, space } from '@/theme/tokens';
 
@@ -15,10 +16,7 @@ export default function QuickAdd() {
   const cup = useStore((s) => s.settings.cupMl);
   const sync = useStore((s) => s.settings.healthSync);
 
-  const go = (href: Href) => {
-    router.back();
-    setTimeout(() => router.push(href), 60);
-  };
+  const go = (href: Href) => router.replace(href);
 
   const actions: { label: string; icon: LucideIcon; strong?: boolean; onPress: () => void }[] = [
     { label: 'Foto do prato', icon: Camera, strong: true, onPress: () => go({ pathname: '/refeicao', params: { mode: 'foto' } }) },
@@ -33,7 +31,7 @@ export default function QuickAdd() {
         const k = dayKey();
         s.setWater(k, (s.water[k] ?? 0) + cup);
         if (sync) health.writeWater(cup, new Date()).catch(() => {});
-        router.back();
+        dismiss();
       },
     },
     { label: 'Atividade', icon: Activity, onPress: () => go('/atividade') },
@@ -42,7 +40,7 @@ export default function QuickAdd() {
 
   return (
     <View style={styles.backdrop}>
-      <Pressable style={StyleSheet.absoluteFill} onPress={() => router.back()} accessibilityLabel="Fechar" />
+      <Pressable style={StyleSheet.absoluteFill} onPress={dismiss} accessibilityLabel="Fechar" />
       <View style={[styles.sheet, { paddingBottom: insets.bottom + space.xl }]}>
         <View style={styles.head}>
           <Txt variant="h2" color={colors.textOnStrong}>
@@ -51,7 +49,7 @@ export default function QuickAdd() {
               agora
             </Txt>
           </Txt>
-          <IconButton icon={X} tone="onStrong" label="Fechar" onPress={() => router.back()} />
+          <IconButton icon={X} tone="onStrong" label="Fechar" onPress={dismiss} />
         </View>
         <View style={styles.grid}>
           {actions.map((a) => (

@@ -1,7 +1,8 @@
 import { router } from 'expo-router';
 import { Activity, Plus } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
-import { Alert, Platform, Switch, View } from 'react-native';
+import { isRunningInExpoGo } from 'expo';
+import { Platform, Switch, View } from 'react-native';
 
 import { WeekBars } from '@/components/charts';
 import { Txt } from '@/components/Txt';
@@ -11,6 +12,7 @@ import { getActivityType, INTENSITY_LABEL } from '@/lib/activities';
 import { fmtInt } from '@/lib/calc';
 import { addDays, dayKey, fromDayKey, startOfWeek } from '@/lib/dates';
 import { health, type HealthDay } from '@/lib/health';
+import { notify } from '@/lib/notify';
 import { useStore } from '@/store/useStore';
 import { colors, space } from '@/theme/tokens';
 
@@ -47,11 +49,17 @@ export function ActivityCard({ day }: { day: string }) {
       const msg =
         Platform.OS === 'web'
           ? 'A integração funciona no app instalado no iPhone (Apple Saúde) ou Android (Health Connect).'
-          : `${health.label} não está disponível neste aparelho.`;
-      return Platform.OS === 'web' ? window.alert(msg) : Alert.alert('Integração indisponível', msg);
+          : isRunningInExpoGo()
+            ? 'A integração com o app de saúde não funciona no Expo Go. Use a versão instalada do app (build de teste).'
+            : `${health.label} não está disponível neste aparelho.`;
+      return notify('Integração indisponível', msg);
     }
-    const ok = await health.connect();
+    const ok = await health.connect().catch(() => false);
     updateSettings({ healthSync: ok });
+    if (!ok) {
+      const msg = `Não foi possível conectar ao ${health.label}. Verifique as permissões nas configurações do aparelho.`;
+      notify('Integração não conectada', msg);
+    }
   }
 
   return (

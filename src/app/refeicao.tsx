@@ -10,7 +10,8 @@ import { Button, Card, Chip, Divider, Field, Row, Segmented, tap } from '@/compo
 import { fmtInt } from '@/lib/calc';
 import { dayKey } from '@/lib/dates';
 import { isProteinRich, searchFoods, type Food } from '@/lib/foods';
-import { analyzeMealPhoto, MEAL_API_URL, type MealAnalysis } from '@/lib/mealAI';
+import { API_URL } from '@/lib/api';
+import { analyzeMealPhoto, type MealAnalysis } from '@/lib/mealAI';
 import { dismiss } from '@/lib/nav';
 import { parseNum } from '@/lib/parse';
 import { pickMealPhoto, type PickedPhoto } from '@/lib/photo';
@@ -240,10 +241,10 @@ function PhotoMode({
 
   return (
     <>
-      {!MEAL_API_URL && __DEV__ ? (
+      {!API_URL ? (
         <Card tone="soft">
           <Txt variant="small">
-            Para analisar fotos, rode o servidor em /server e defina EXPO_PUBLIC_API_URL no app. Veja o README.
+            A análise por foto ainda não está ligada nesta versão de teste. Use a busca ou o registro manual.
           </Txt>
         </Card>
       ) : null}

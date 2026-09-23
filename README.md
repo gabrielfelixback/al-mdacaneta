@@ -32,6 +32,14 @@ Feito em **Expo SDK 57 + Expo Router**, roda em iOS, Android e web (preview).
 - **Nível do medicamento**: soma das doses decaindo pela meia-vida (tirzepatida ~5 d, semaglutida ~7 d, liraglutida ~13 h). Estimativa educacional.
 - **Calculadora de doses**: mg ÷ (mg/mL) × 100 = UI.
 
+## Testar o app
+
+**No navegador (link de teste):** `npm run build:teste` gera `dist-teste/alem-da-caneta-teste.html`, um único arquivo com o app inteiro (código e fontes embutidos) em modo de teste — o Pro é liberado sem cobrança. Abre em qualquer navegador, inclusive no celular. Recursos do aparelho (Apple Saúde/Health Connect, câmera nativa, PDF compartilhável) só existem no app instalado.
+
+**No celular, instalado (build de teste):** com uma conta Expo, `npx eas-cli@latest build --profile preview --platform android` gera um APK instalável por link; no iPhone, o mesmo comando com `--platform ios` exige conta Apple Developer (distribuição interna/TestFlight). O perfil `preview` já liga o modo de teste do Pro.
+
+**No Expo Go:** `npx expo start` e escaneie o QR code. Tudo funciona menos a integração com apps de saúde, que precisa do build instalado.
+
 ## Rodando
 
 ```bash

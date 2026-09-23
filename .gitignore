@@ -46,3 +46,4 @@ example
 .env
 server/.env
 server/node_modules/
+dist-teste/

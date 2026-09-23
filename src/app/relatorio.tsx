@@ -7,6 +7,7 @@ import { Platform, Pressable, View } from 'react-native';
 import { useShallow } from 'zustand/react/shallow';
 
 import { CapsuleIcon } from '@/components/Brand';
+import { HtmlPreview } from '@/components/HtmlPreview';
 import { StackScreen } from '@/components/Screen';
 import { Txt } from '@/components/Txt';
 import { Button, Card, Divider, Row, Segmented, tap } from '@/components/ui';
@@ -41,6 +42,7 @@ export default function Report() {
   const [selected, setSelected] = useState<Set<ReportSection>>(() => new Set(REPORT_SECTIONS.map((s) => s.id)));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [preview, setPreview] = useState<string | null>(null);
   const counts = useMemo(() => sectionCounts(data, period), [data, period]);
   const total = Object.values(counts).reduce<number>((a, b) => a + (b ?? 0), 0);
 
@@ -59,12 +61,8 @@ export default function Report() {
     try {
       const html = buildReportHtml(data, period, selected);
       if (Platform.OS === 'web') {
-        // No navegador o expo-print imprime a página atual; abrimos o relatório numa janela própria.
-        const w = window.open('', '_blank');
-        if (!w) throw new Error('Permita pop-ups para gerar o relatório.');
-        w.document.write(html);
-        w.document.close();
-        w.onload = () => w.print();
+        // No navegador, abrir janelas e imprimir pode ser bloqueado: mostramos a prévia aqui mesmo.
+        setPreview(html);
       } else {
         const { uri } = await Print.printToFileAsync({ html });
         await Sharing.shareAsync(uri, { mimeType: 'application/pdf', UTI: 'com.adobe.pdf', dialogTitle: 'Relatório do tratamento' });
@@ -158,7 +156,7 @@ export default function Report() {
       </Card>
 
       <Button
-        label={busy ? 'Gerando…' : pro ? 'Gerar PDF e compartilhar' : 'Gerar PDF · Pro'}
+        label={busy ? 'Gerando…' : !pro ? 'Gerar PDF · Pro' : Platform.OS === 'web' ? 'Ver relatório' : 'Gerar PDF e compartilhar'}
         icon={FileText}
         disabled={busy || selected.size === 0}
         onPress={generate}
@@ -167,6 +165,12 @@ export default function Report() {
         <Txt variant="small" color={colors.danger}>
           {error}
         </Txt>
+      ) : null}
+      {preview ? (
+        <>
+          <Txt variant="caption">Na versão web o relatório aparece aqui; no app instalado ele vira PDF para compartilhar.</Txt>
+          <HtmlPreview html={preview} />
+        </>
       ) : null}
       <Txt variant="caption">
         Inclui resumo com adesão às aplicações, ritmo de perda, IMC, sintomas e médias de proteína e água. Dados

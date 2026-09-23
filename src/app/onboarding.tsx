@@ -20,7 +20,7 @@ import {
 } from '@/lib/calc';
 import { WEEKDAYS_LONG } from '@/lib/dates';
 import { getMedication, INGREDIENT_LABEL, MEDICATIONS } from '@/lib/medications';
-import { parseNum, validTime } from '@/lib/parse';
+import { heightCm, parseNum, validTime } from '@/lib/parse';
 import { useStore } from '@/store/useStore';
 import { colors, MAX_WIDTH, space } from '@/theme/tokens';
 
@@ -56,7 +56,7 @@ export default function Onboarding() {
   const [lastDoseDaysAgo, setLastDoseDaysAgo] = useState(-1);
 
   const med = getMedication(medId);
-  const h = parseNum(height);
+  const h = heightCm(height);
   const w = parseNum(weight);
   const g = parseNum(goal);
   const by = parseNum(birthYear);

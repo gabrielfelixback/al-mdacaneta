@@ -10,7 +10,7 @@ import { Button, Field, IconButton, Row, tap } from '@/components/ui';
 import { formatShort } from '@/lib/dates';
 import { LIBRARY } from '@/lib/library';
 import { dismiss } from '@/lib/nav';
-import { PLANS, purchase, redeemCode, type Plan } from '@/lib/purchases';
+import { BILLING_READY, PLANS, purchase, redeemCode, TEST_MODE, type Plan } from '@/lib/purchases';
 import { useStore } from '@/store/useStore';
 import { colors, MAX_WIDTH, palette, radius, space } from '@/theme/tokens';
 
@@ -144,7 +144,17 @@ export default function Pro() {
                   </Pressable>
                 );
               })}
-              <Button tone="accent" label={busy ? 'Aguarde…' : 'Assinar o Pro'} disabled={busy} onPress={() => run(() => purchase(plan))} />
+              <Button
+                tone="accent"
+                label={busy ? 'Aguarde…' : !BILLING_READY && TEST_MODE ? 'Liberar Pro de teste' : 'Assinar o Pro'}
+                disabled={busy}
+                onPress={() => run(() => purchase(plan))}
+              />
+              {!BILLING_READY && TEST_MODE ? (
+                <Txt variant="caption" align="center" color={colors.support}>
+                  Versão de teste: o Pro é liberado sem cobrança.
+                </Txt>
+              ) : null}
 
               {showCode ? (
                 <View style={{ gap: space.sm }}>

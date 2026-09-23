@@ -1,13 +1,15 @@
 import { Info, Share2, TriangleAlert } from 'lucide-react-native';
 import { useState } from 'react';
-import { Share, View } from 'react-native';
+import { View } from 'react-native';
 import Svg, { Line, Rect, Text as SvgText } from 'react-native-svg';
 
+import { requireSetup } from '@/components/RequireSetup';
 import { StackScreen } from '@/components/Screen';
 import { Txt } from '@/components/Txt';
 import { Button, Card, Chip, Divider, Field, Row, Segmented } from '@/components/ui';
 import { fmtMg } from '@/lib/calc';
 import { getMedication, type ActiveIngredient } from '@/lib/medications';
+import { shareText } from '@/lib/notify';
 import { parseNum } from '@/lib/parse';
 import { medicationLabel } from '@/lib/treatment';
 import { useStore } from '@/store/useStore';
@@ -68,7 +70,7 @@ function UnitsRuler({ units, max, tick }: { units: number; max: number; tick: nu
   );
 }
 
-export default function DoseCalculator() {
+function DoseCalculator() {
   const treatment = useStore((s) => s.treatment)!;
   const update = useStore((s) => s.updateTreatment);
   const med = getMedication(treatment.medicationId);
@@ -117,7 +119,7 @@ export default function DoseCalculator() {
       '',
       'Válido só para esta concentração e seringa. Confira o rótulo do frasco e a dose prescrita. — Além da Caneta',
     ];
-    Share.share({ message: lines.join('\n') }).catch(() => {});
+    shareText(lines.join('\n'));
   }
 
   return (
@@ -305,3 +307,5 @@ export default function DoseCalculator() {
     </StackScreen>
   );
 }
+
+export default requireSetup(DoseCalculator);

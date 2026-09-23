@@ -18,6 +18,9 @@ export const PLANS: Plan[] = [
 
 export const BILLING_READY = false;
 
+/** Builds de teste (EXPO_PUBLIC_TEST_MODE=1) liberam o Pro sem cobrança para quem está testando. */
+export const TEST_MODE = __DEV__ || process.env.EXPO_PUBLIC_TEST_MODE === '1';
+
 export class BillingNotReadyError extends Error {
   constructor() {
     super('Pagamentos ainda não estão disponíveis nesta versão.');
@@ -31,7 +34,7 @@ function addMonths(d: Date, n: number) {
 }
 
 export async function purchase(plan: Plan['id']): Promise<ProState> {
-  if (!BILLING_READY && !__DEV__) throw new BillingNotReadyError();
+  if (!BILLING_READY && !TEST_MODE) throw new BillingNotReadyError();
   const now = new Date();
   return {
     active: true,
@@ -44,7 +47,7 @@ export async function purchase(plan: Plan['id']): Promise<ProState> {
 /** Quem comprou o Método 3P na página de vendas resgata o acesso com o código do e-mail. */
 export async function redeemCode(code: string): Promise<ProState> {
   if (!code.trim()) throw new Error('Digite o código recebido por e-mail.');
-  if (!BILLING_READY && !__DEV__) throw new BillingNotReadyError();
+  if (!BILLING_READY && !TEST_MODE) throw new BillingNotReadyError();
   const now = new Date();
   return { active: true, plan: 'metodo3p', since: now.toISOString(), renewsAt: addMonths(now, 12).toISOString() };
 }

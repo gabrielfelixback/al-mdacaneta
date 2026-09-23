@@ -1,11 +1,10 @@
-import * as WebBrowser from 'expo-web-browser';
-import { Activity, BookOpen, Briefcase, FlaskConical, PersonStanding, Utensils, type LucideIcon } from 'lucide-react-native';
-import { ExternalLink } from 'lucide-react-native';
-import { Pressable, View } from 'react-native';
+import { Activity, BookOpen, Briefcase, ExternalLink as ExternalLinkIcon, FlaskConical, PersonStanding, Utensils, type LucideIcon } from 'lucide-react-native';
+import { View } from 'react-native';
 
+import { ExternalLink } from '@/components/ExternalLink';
 import { StackScreen } from '@/components/Screen';
 import { Txt } from '@/components/Txt';
-import { Card, Divider, Row, tap } from '@/components/ui';
+import { Card, Divider, Row } from '@/components/ui';
 import { REFERENCE_GROUPS } from '@/lib/references';
 import { colors, space } from '@/theme/tokens';
 
@@ -39,21 +38,15 @@ export default function References() {
             {g.items.map((r, i) => (
               <View key={r.url}>
                 {i > 0 && <Divider />}
-                <Pressable
-                  accessibilityRole="link"
-                  onPress={() => {
-                    tap();
-                    WebBrowser.openBrowserAsync(r.url).catch(() => {});
-                  }}
-                  style={({ pressed }) => ({ paddingVertical: space.md, opacity: pressed ? 0.6 : 1 })}>
+                <ExternalLink href={r.url} style={{ paddingVertical: space.md }}>
                   <Row style={{ alignItems: 'flex-start' }}>
                     <View style={{ flex: 1, gap: 2 }}>
                       <Txt variant="body">{r.title}</Txt>
                       <Txt variant="caption">{r.source}</Txt>
                     </View>
-                    <ExternalLink size={18} color={colors.textSecondary} />
+                    <ExternalLinkIcon size={18} color={colors.textSecondary} />
                   </Row>
-                </Pressable>
+                </ExternalLink>
               </View>
             ))}
           </Card>
