@@ -1,0 +1,42 @@
+name: Segurança
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  semgrep:
+    name: Análise estática (Semgrep)
+    runs-on: ubuntu-latest
+    container:
+      image: semgrep/semgrep
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - name: Regras de segurança + regras do projeto
+        run: >-
+          semgrep scan --metrics=off --error
+          --config p/typescript
+          --config p/react
+          --config p/nodejs
+          --config p/expressjs
+          --config p/owasp-top-ten
+          --config p/secrets
+          --config .semgrep/regras-projeto.yml
+
+  dependencias:
+    name: Dependências com falhas graves
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+      # Falhas moderadas conhecidas vêm de ferramentas de build do Expo; o bloqueio é para "high" ou pior.
+      - name: App
+        run: npm audit --omit=dev --audit-level=high
+      - name: Servidor
+        working-directory: server
+        run: npm audit --omit=dev --audit-level=high

@@ -1,0 +1,65 @@
+# Regras de segurança específicas do Além da Caneta (rodam junto com os conjuntos do Semgrep Registry).
+rules:
+  - id: chave-anthropic-no-codigo
+    languages: [generic]
+    severity: ERROR
+    message: Chave da API da Anthropic no código. Use a variável de ambiente ANTHROPIC_API_KEY no servidor.
+    pattern-regex: sk-ant-[A-Za-z0-9_-]{20,}
+    paths:
+      exclude: ['*.md', '.semgrep/testes/*']
+
+  - id: sdk-anthropic-no-app
+    languages: [typescript]
+    severity: ERROR
+    message: >-
+      O SDK da Anthropic não pode ser usado no app: a chave iria junto no pacote instalado.
+      Chame o servidor (src/lib/api.ts), que guarda a chave.
+    pattern-either:
+      - pattern: import $X from '@anthropic-ai/sdk'
+      - pattern: import { ... } from '@anthropic-ai/sdk'
+      - pattern: require('@anthropic-ai/sdk')
+    paths:
+      include: ['/src/**']
+
+  - id: variavel-publica-com-segredo
+    languages: [typescript]
+    severity: ERROR
+    message: >-
+      Variáveis EXPO_PUBLIC_* vão dentro do app e qualquer pessoa pode lê-las.
+      Segredos (chaves de API, tokens) devem ficar só no servidor.
+    pattern-regex: EXPO_PUBLIC_[A-Z_]*(ANTHROPIC|SECRET|TOKEN|PRIVATE|PASSWORD)[A-Z_]*
+    paths:
+      include: ['/src/**', '/scripts/**']
+
+  - id: dialogo-bloqueado-na-web
+    languages: [typescript]
+    severity: WARNING
+    message: >-
+      alert/confirm/prompt/print são bloqueados em navegadores restritos (e no link de teste).
+      Use notify() de src/lib/notify.ts ou confirmação dentro da tela.
+    pattern-either:
+      - pattern: window.alert(...)
+      - pattern: window.confirm(...)
+      - pattern: window.prompt(...)
+      - pattern: window.print(...)
+    paths:
+      include: ['/src/**']
+
+  - id: html-sem-escape
+    languages: [typescript]
+    severity: ERROR
+    message: "HTML inserido direto na página. Escape o conteúdo (ex.: esc() em src/lib/report.ts) ou use componentes."
+    pattern-either:
+      - pattern: <$EL dangerouslySetInnerHTML={...} />
+      - pattern: $X.innerHTML = $Y
+      - pattern: $DOC.write($Y)
+
+  - id: rota-api-sem-limite
+    languages: [typescript]
+    severity: WARNING
+    message: Rota da API sem rateLimit(). Toda rota que chama o Claude precisa de limite para não gastar créditos à toa.
+    patterns:
+      - pattern: app.post($PATH, ...)
+      - pattern-not: app.post($PATH, rateLimit(...), ...)
+    paths:
+      include: ['/server/src/**']

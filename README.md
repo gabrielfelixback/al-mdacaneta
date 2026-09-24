@@ -82,6 +82,13 @@ Endpoints:
 - Os PDFs do curso entram em `src/lib/library.ts`, no campo `url` de cada material (ex.: link assinado de um storage privado). Sem `url`, o app mostra “PDF em preparação”.
 - Preços provisórios em `src/lib/purchases.ts` (`PLANS`). A cobrança real (App Store / Google Play) ainda não está ligada: com `BILLING_READY = false`, em desenvolvimento o botão ativa o Pro em modo de teste e em produção mostra que pagamentos ainda não estão disponíveis. Próximo passo: RevenueCat + validação do código de compra no servidor.
 
+## Segurança
+
+- **Varredura automática** (`.github/workflows/seguranca.yml`) a cada push e pull request: Semgrep com os conjuntos TypeScript, React, Node/Express, OWASP Top 10 e segredos, mais as regras do projeto em `.semgrep/regras-projeto.yml`, e `npm audit` bloqueando falhas graves de dependências. Rodar localmente: `npm run seguranca` (requer `semgrep` instalado).
+- **Regras do projeto:** chave da Anthropic no código, SDK da Anthropic dentro do app, segredo em variável `EXPO_PUBLIC_*`, `alert/confirm/print` no app, HTML sem escape e rota da API sem limite de uso. Exemplos que devem disparar cada regra ficam em `.semgrep/testes/`.
+- **Servidor:** limite por IP (20 análises de foto e 60 perguntas ao assistente por hora), chave do app opcional (`APP_API_KEY` no servidor + `EXPO_PUBLIC_APP_KEY` no app) e origens do navegador liberadas via `ALLOWED_ORIGINS`. Em produção, defina as três variáveis (veja `server/.env.example`); atrás de proxy, `TRUST_PROXY=1`.
+- **Dependências:** há avisos moderados em ferramentas de build do Expo (`uuid`, `decode-uri-component`, via `@expo/config-plugins`) que não vão para o app instalado; somem com as próximas atualizações do Expo.
+
 ## Estrutura
 
 ```

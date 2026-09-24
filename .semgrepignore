@@ -1,0 +1,8 @@
+# Dependências e builds
+node_modules/
+server/node_modules/
+dist/
+dist-teste/
+.expo/
+# Exemplos propositalmente inseguros usados para testar as regras do projeto
+.semgrep/testes/

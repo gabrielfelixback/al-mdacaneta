@@ -2,6 +2,9 @@
 
 export const API_URL = process.env.EXPO_PUBLIC_API_URL?.replace(/\/$/, '');
 
+// Dificulta o uso da API por terceiros; o limite por IP no servidor é a proteção principal.
+const APP_KEY = process.env.EXPO_PUBLIC_APP_KEY;
+
 export class ApiUnavailableError extends Error {}
 
 export async function postJson<T>(path: string, body: unknown, timeoutMs = 90_000): Promise<T> {
@@ -12,7 +15,10 @@ export async function postJson<T>(path: string, body: unknown, timeoutMs = 90_00
   try {
     res = await fetch(`${API_URL}${path}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        ...(APP_KEY ? { 'x-app-key': APP_KEY } : {}),
+      },
       body: JSON.stringify(body),
       signal: controller.signal,
     });

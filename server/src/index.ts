@@ -6,6 +6,8 @@ import { bodyLimit } from 'hono/body-limit';
 import { cors } from 'hono/cors';
 import { z } from 'zod';
 
+import { allowedOrigins, rateLimit, requireAppKey } from './guard';
+
 // Lê ANTHROPIC_API_KEY do ambiente.
 const client = new Anthropic();
 
@@ -45,11 +47,13 @@ type AllowedType = (typeof ALLOWED_TYPES)[number];
 
 const app = new Hono();
 
-app.use('/api/*', cors());
+const origins = allowedOrigins();
+app.use('/api/*', cors({ origin: origins, allowHeaders: ['Content-Type', 'x-app-key'], allowMethods: ['POST', 'OPTIONS'] }));
+app.use('/api/*', requireAppKey());
 
 app.get('/health', (c) => c.json({ ok: true }));
 
-app.post('/api/analyze-meal', bodyLimit({ maxSize: 8 * 1024 * 1024 }), async (c) => {
+app.post('/api/analyze-meal', rateLimit({ max: 20, windowMs: 60 * 60_000 }), bodyLimit({ maxSize: 8 * 1024 * 1024 }), async (c) => {
   const body = await c.req.json<{ image?: string; mediaType?: string; context?: string }>().catch(() => null);
   if (!body?.image) return c.text('Envie a foto em base64 no campo "image".', 400);
   const mediaType = (body.mediaType ?? 'image/jpeg') as AllowedType;
@@ -117,7 +121,7 @@ Limites:
 
 Use o contexto do app (metas e registros do dia) quando for relevante, sem repeti-lo por inteiro.`;
 
-app.post('/api/assistant', bodyLimit({ maxSize: 256 * 1024 }), async (c) => {
+app.post('/api/assistant', rateLimit({ max: 60, windowMs: 60 * 60_000 }), bodyLimit({ maxSize: 256 * 1024 }), async (c) => {
   const body = await c.req
     .json<{ messages?: { role: 'user' | 'assistant'; text: string }[]; context?: string }>()
     .catch(() => null);
@@ -162,6 +166,12 @@ app.post('/api/assistant', bodyLimit({ maxSize: 256 * 1024 }), async (c) => {
   }
 });
 
+if (origins === '*') {
+  console.warn('ALLOWED_ORIGINS não definida: qualquer site pode chamar a API pelo navegador. Defina em produção.');
+}
+if (!process.env.APP_API_KEY) {
+  console.warn('APP_API_KEY não definida: a API aceita chamadas sem a chave do app. Defina em produção.');
+}
 if (!process.env.ANTHROPIC_API_KEY) {
   console.warn('ANTHROPIC_API_KEY não definida: /api/analyze-meal vai falhar até você configurá-la em server/.env.');
 }
