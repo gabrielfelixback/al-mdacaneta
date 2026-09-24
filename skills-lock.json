@@ -6,6 +6,12 @@
       "sourceType": "github",
       "skillPath": "cli-tool/components/skills/security/sast-configuration/SKILL.md",
       "computedHash": "6577bcf5bb61b362d2b86dd84b0c85c8efd356c31745589ea1a1b5038f7f5c6c"
+    },
+    "scanpy": {
+      "source": "davila7/claude-code-templates",
+      "sourceType": "github",
+      "skillPath": "cli-tool/components/skills/scientific/scanpy/SKILL.md",
+      "computedHash": "7470b3cfe1b64d74b5f379032fc653e513993c24fedc0e524624f99983531c82"
     }
   }
 }
